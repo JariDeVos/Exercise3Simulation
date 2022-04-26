@@ -1,14 +1,13 @@
+import java.io.*;
 import java.util.*;
-import java.io.File;
-import java.io.FileNotFoundException;
 
 public class Simulation {
     //information given in the case
-    String inputFileName = "/Users/jaridevos/Documents/Simulation/Exercise3/input-S1-14.txt";
+    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S1-14.txt";
     int D = 6;                         // number of days per week (NOTE: Sunday not included! so do NOT use to calculate appointment waiting time)
     int amountOTSlotsPerDay = 10;      // number of overtime slots per day
     int S = 32 + amountOTSlotsPerDay;  // number of slots per day
-    double slotLenght = 15.0 / 60.0;             // duration of a slot (in hours)
+    double slotLength = 15.0 / 60.0;             // duration of a slot (in hours)
     double lambdaElective = 28.345;
     double meanTardiness = 0;
     double stdevTardiness = 2.5;
@@ -24,8 +23,8 @@ public class Simulation {
     double weightUr = 1.0 / 9.0;        // objective weight urgent scan wait time
 
     //Variables we need to set ourselves
-    int W = 10;                        // number of weeks (= runs lenght)
-    int R = 1;                         // number of replications (set their values yourself in the initalization method!)
+    int W = 10;                        // number of weeks (= runs length)
+    int R = 1;                         // number of replications (set their values yourself in the initialization method!)
     int d,s,w,r;
     int rule = 1;                      // the appointment scheduling rule
     //not sure about this one
@@ -34,10 +33,10 @@ public class Simulation {
 
     //Variables specific to one simulation run
     ArrayList<Patient> patients = new ArrayList<>();            // patient list
-    double[] movingAvgElectiveAppWT = new double[W];;    // moving average elective appointment waiting time
-    double[] movingAvgElectiveScanWT = new double[W];;   // moving average elective scan waiting time
-    double[] movingAvgUrgentScanWT = new double[W];;     // moving average urgent scan waiting time
-    double[] movingAvgOT = new double[W];;               // moving average overtime
+    double[] movingAvgElectiveAppWT = new double[W];    // moving average elective appointment waiting time
+    double[] movingAvgElectiveScanWT = new double[W];   // moving average elective scan waiting time
+    double[] movingAvgUrgentScanWT = new double[W];     // moving average urgent scan waiting time
+    double[] movingAvgOT = new double[W];               // moving average overtime
     double avgElectiveAppWT = 0;           // average elective appointment waiting time
     double avgElectiveScanWT = 0;          // average elective scan waiting time
     double avgUrgentScanWT = 0;            // average urgent scan waiting time
@@ -88,15 +87,15 @@ public class Simulation {
                 }else{                                      // elective slots: appointment time is set according to rule !
                     if(rule == 1){ // FIFO
                         weekSchedule[s][d].appTime = time;
-                        //}else if(rule == 2){
-                        //TO DO: Bailey-Welch rule
+                        }else if(rule == 2){ //Bailey-Welch rule
+
                         //}else if(rule == 3){
                         // TO DO: Blocking rule
                         //}else if(rule == 4){
                         // TO DO: Benchmark rule
                     }
                 }
-                time += slotLenght;
+                time += slotLength;
                 if(time == 12){
                     time = 13; // skip to the end of the luchbreak
                 }
@@ -379,9 +378,9 @@ public class Simulation {
         });
     }
 
-    public void runOneSimulation(Random r){
+    public void runOneSimulation(Random r) throws IOException {
         generatePatients(r);     // create patient arrival events (elective patients call, urgent patient arrive at the hospital)
-        schedulePatients();     // schedule urgent and elective patients in slots based on their arrival events => detrmine the appointment wait time
+        schedulePatients();     // schedule urgent and elective patients in slots based on their arrival events => determine the appointment wait time
         sortPatientsOnAppTime();   // sort patients on their appointment time (unscheduled patients are grouped at the end of the list)
 
         // determine scan wait time per patient and overtime per day
@@ -468,15 +467,16 @@ public class Simulation {
         avgUrgentScanWT = avgUrgentScanWT / numberOfPatients[1];
         avgOT = avgOT / (D * W);
         // print moving avg
-        /*FILE *file = fopen("/Users/tinemeersman/Documents/project SMA 2022 student code /output-movingAvg.txt", "a"); // TODO: use your own directory
-        fprintf(file,"week \t elAppWT \t elScanWT \t urScanWT \t OT \n");
+        PrintWriter pw = new PrintWriter(new FileWriter("C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/output-movingAvg.txt")); // TODO: use your own directory
+        pw.write("week \t elAppWT \t elScanWT \t urScanWT \t OT \n");
+
         for(w = 0; w < W; w++){
-        fprintf(file, "%d \t %.2f \t %.2f \t %.2f \t %.2f \n", w, movingAvgElectiveAppWT[w], movingAvgElectiveScanWT[w], movingAvgUrgentScanWT[w], movingAvgOT[w]);
+            pw.write("%d \t %.2f \t %.2f \t %.2f \t %.2f \n" + w + movingAvgElectiveAppWT[w] + movingAvgElectiveScanWT[w] + movingAvgUrgentScanWT[w] + movingAvgOT[w]);
         }
-        fclose(file);*/
+        pw.close();
     }
 
-    public void runSimulations(){
+    public void runSimulations() throws IOException {
         double electiveAppWT = 0;
         double electiveScanWT = 0;
         double urgentScanWT = 0;
@@ -498,7 +498,7 @@ public class Simulation {
             electiveScanWT += avgElectiveScanWT;
             urgentScanWT += avgUrgentScanWT;
             OT += avgOT;
-            OV += (avgElectiveAppWT / weightEl) + (avgUrgentScanWT / weightUr);
+            OV += (avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr);
             System.out.println(r + String.format("\t%.2f", avgElectiveAppWT) + String.format("\t%.2f", avgElectiveScanWT) + String.format("\t%.2f", avgUrgentScanWT) + String.format("\t%.2f", avgOT) + String.format("\t%.2f", (avgElectiveAppWT / weightEl + avgUrgentScanWT / weightUr)));
         }
         electiveAppWT = electiveAppWT / R;
@@ -510,8 +510,13 @@ public class Simulation {
         System.out.println("Avg.: " + String.format("%.2f",electiveAppWT) + " " + String.format("%.2f",electiveScanWT) + " " + String.format("%.2f",urgentScanWT) + " " + String.format("%.2f",OT) + " " + String.format("%.2f",objectiveValue));
 
         // print results
-        //FILE *file = fopen("/Users/tinemeersman/Documents/project SMA 2022 student code /output.txt", "a"); // TODO: use your own directory
+        //PrintWriter pw = new PrintWriter(new FileWriter("C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/output.txt")); // TODO: use your own directory
+        //pw.write("week \t elAppWT \t elScanWT \t urScanWT \t OT \n");
+
+        //for(w = 0; w < W; w++){
+        //    pw.write("");
+        //}
+        //pw.close();
         // TODO: print the output you need to a .txt file
-        //fclose(file);
     }
 }
