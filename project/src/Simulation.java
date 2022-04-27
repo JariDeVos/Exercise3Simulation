@@ -471,7 +471,7 @@ public class Simulation {
         pw.write("week \t elAppWT \t elScanWT \t urScanWT \t OT \n");
 
         for(w = 0; w < W; w++){
-            pw.write("%d \t %.2f \t %.2f \t %.2f \t %.2f \n" + w + movingAvgElectiveAppWT[w] + movingAvgElectiveScanWT[w] + movingAvgUrgentScanWT[w] + movingAvgOT[w]);
+            pw.write(String.format("%d \t ", w+1) + String.format("%.2f \t ", movingAvgElectiveAppWT[w]) + String.format("%.2f \t ", movingAvgElectiveScanWT[w]) + String.format("%.2f \t ", movingAvgUrgentScanWT[w]) + String.format("%.2f \n", movingAvgOT[w]));
         }
         pw.close();
     }
