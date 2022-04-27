@@ -24,7 +24,7 @@ public class Simulation {
 
     //Variables we need to set ourselves
     int W = 10;                        // number of weeks (= runs length)
-    int R = 1;                         // number of replications (set their values yourself in the initialization method!)
+    int R = 10;                         // number of replications (set their values yourself in the initialization method!)
     int d,s,w,r;
     int rule = 1;                      // the appointment scheduling rule
     //not sure about this one
@@ -487,7 +487,7 @@ public class Simulation {
         }catch (FileNotFoundException e){
             System.out.println("File not found");
         }
-        System.out.println("r \t elAppWT \t elScanWT \t urScanWT \t OT \t OV \n");
+        System.out.println("R \t elAppWT \t elScanWT \t urScanWT \t OT \t OV \n");
         // run R replications
         for(r = 0; r < R; r++){
             resetSystem(); // reset all variables related to 1 replication
@@ -499,7 +499,7 @@ public class Simulation {
             urgentScanWT += avgUrgentScanWT;
             OT += avgOT;
             OV += (avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr);
-            System.out.println(r + String.format("\t%.2f", avgElectiveAppWT) + String.format("\t%.2f", avgElectiveScanWT) + String.format("\t%.2f", avgUrgentScanWT) + String.format("\t%.2f", avgOT) + String.format("\t%.2f", (avgElectiveAppWT / weightEl + avgUrgentScanWT / weightUr)));
+            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.2f \t ", avgOT) + String.format("%.2f \t ", (avgElectiveAppWT / weightEl + avgUrgentScanWT / weightUr)));
         }
         electiveAppWT = electiveAppWT / R;
         electiveScanWT = electiveScanWT / R;
@@ -507,7 +507,7 @@ public class Simulation {
         OT = OT / R;
         OV = OV / R;
         double objectiveValue = (electiveAppWT / weightEl) + (urgentScanWT / weightUr);
-        System.out.println("Avg.: " + String.format("%.2f",electiveAppWT) + " " + String.format("%.2f",electiveScanWT) + " " + String.format("%.2f",urgentScanWT) + " " + String.format("%.2f",OT) + " " + String.format("%.2f",objectiveValue));
+        System.out.println("Avg. " + String.format("\t%.2f",electiveAppWT) + " " + String.format("\t %.2f \t",electiveScanWT) + " " + String.format("\t %.2f\t",urgentScanWT) + " " + String.format("\t %.2f\t",OT) + " " + String.format("%.2f",objectiveValue));
 
         // print results
         //PrintWriter pw = new PrintWriter(new FileWriter("C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/output.txt")); // TODO: use your own directory
