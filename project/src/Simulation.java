@@ -3,7 +3,7 @@ import java.util.*;
 
 public class Simulation {
     //information given in the case
-    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S1-14.txt";
+    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S3-20.txt";
     int D = 6;                         // number of days per week (NOTE: Sunday not included! so do NOT use to calculate appointment waiting time)
     int amountOTSlotsPerDay = 10;      // number of overtime slots per day
     int S = 32 + amountOTSlotsPerDay;  // number of slots per day
@@ -23,10 +23,10 @@ public class Simulation {
     double weightUr = 1.0 / 9.0;        // objective weight urgent scan wait time
 
     //Variables we need to set ourselves
-    int W = 10;                        // number of weeks (= runs length)
-    int R = 10;                         // number of replications (set their values yourself in the initialization method!)
+    int W = 100;                        // number of weeks (= runs length)
+    int R = 100;                         // number of replications (set their values yourself in the initialization method!)
     int d,s,w,r;
-    int rule = 1;                      // the appointment scheduling rule
+    int rule = 2;                      // the appointment scheduling rule
     //not sure about this one
     Slot[][] weekSchedule = new Slot[S][D];       // array of the cyclic slot schedule (days-slots)
 
@@ -87,12 +87,16 @@ public class Simulation {
                 }else{                                      // elective slots: appointment time is set according to rule !
                     if(rule == 1){ // FIFO
                         weekSchedule[s][d].appTime = time;
-                        }else if(rule == 2){ //Bailey-Welch rule
-
-                        //}else if(rule == 3){
-                        // TO DO: Blocking rule
-                        //}else if(rule == 4){
-                        // TO DO: Benchmark rule
+                        }else if(rule == 2){ // Bailey-Welch rule
+                            if (s == 0) {
+                                weekSchedule[s][d].appTime = time;
+                            } else weekSchedule[s][d].appTime = time - slotLength;
+                        }else if(rule == 3){ // Blocking rule
+                            if (s % 2 == 0) {
+                                weekSchedule[s][d].appTime = time;
+                            } else weekSchedule[s][d].appTime = time - slotLength;
+                        }else if(rule == 4){ // Benchmark rule
+                            weekSchedule[s][d].appTime = time - (0.5 * stdevElectiveDuration);
                     }
                 }
                 time += slotLength;
