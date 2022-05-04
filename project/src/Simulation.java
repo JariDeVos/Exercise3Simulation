@@ -202,8 +202,8 @@ public class Simulation {
                     if((o1.callTime - o2.callTime) > 0){ return 1;
                     }else if((o1.callTime - o2.callTime) == 0){ return 0;
                     }else{ return -1; } }
-                if(o1.scanType == 2){ return 1; }
-                if(o2.scanType == 2){ return -1; }
+                if(o1.patientType == 2){ return 1; }
+                if(o2.patientType == 2){ return -1; }
                 return 1;
             }
         });
@@ -429,12 +429,12 @@ public class Simulation {
 
             // OVERTIME
             if(prevDay > -1 && prevDay != pat.scanDay){
-                if(d == 3 || d == 5){
+                if(prevDay == 3 || prevDay == 5){
                     movingAvgOT[prevWeek] += Math.max(0.0, prevScanEndTime - 13);
                 }else{
                     movingAvgOT[prevWeek] += Math.max(0.0, prevScanEndTime - 17);
                 }
-                if(d == 3 || d == 5){
+                if(prevDay == 3 || prevDay == 5){
                     avgOT += Math.max(0.0, prevScanEndTime - 13);
                 }else{
                     avgOT += Math.max(0.0, prevScanEndTime - 17);
@@ -454,6 +454,9 @@ public class Simulation {
             if(pat.isNoShow){
                 //prevScanEndTime stays the same, it is the end time of the patient before the no-show patient
                 prevIsNoShow = true;
+                if(pat.scanWeek != prevWeek || pat.scanDay != prevDay){
+                    prevScanEndTime = weekSchedule[pat.slotNr][pat.scanDay].startTime;
+                }
             }else{
                 prevScanEndTime = pat.scanTime + pat.duration;
                 prevIsNoShow = false;
