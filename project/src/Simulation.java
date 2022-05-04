@@ -24,7 +24,7 @@ public class Simulation {
 
     //Variables we need to set ourselves
     int W = 100;                        // number of weeks (= runs length)
-    int R = 100;                         // number of replications (set their values yourself in the initialization method!)
+    int R = 5;                         // number of replications (set their values yourself in the initialization method!)
     int d,s,w,r;
     int rule = 2;                      // the appointment scheduling rule
     //not sure about this one
@@ -503,14 +503,14 @@ public class Simulation {
             urgentScanWT += avgUrgentScanWT;
             OT += avgOT;
             OV += (avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr);
-            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.2f \t ", avgOT) + String.format("%.2f \t ", (avgElectiveAppWT / weightEl + avgUrgentScanWT / weightUr)));
+            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.2f \t ", avgOT) + String.format("%.2f \t ", (avgElectiveAppWT * weightEl + avgUrgentScanWT * weightUr)));
         }
         electiveAppWT = electiveAppWT / R;
         electiveScanWT = electiveScanWT / R;
         urgentScanWT = urgentScanWT / R;
         OT = OT / R;
         OV = OV / R;
-        double objectiveValue = (electiveAppWT / weightEl) + (urgentScanWT / weightUr);
+        double objectiveValue = (electiveAppWT * weightEl) + (urgentScanWT * weightUr);
         System.out.println("Avg. " + String.format("\t%.2f",electiveAppWT) + " " + String.format("\t %.2f \t",electiveScanWT) + " " + String.format("\t %.2f\t",urgentScanWT) + " " + String.format("\t %.2f\t",OT) + " " + String.format("%.2f",objectiveValue));
 
         // print results
