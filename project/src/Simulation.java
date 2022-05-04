@@ -3,7 +3,7 @@ import java.util.*;
 
 public class Simulation {
     //information given in the case
-    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S3-20.txt";
+    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S3-16.txt";
     int D = 6;                         // number of days per week (NOTE: Sunday not included! so do NOT use to calculate appointment waiting time)
     int amountOTSlotsPerDay = 10;      // number of overtime slots per day
     int S = 32 + amountOTSlotsPerDay;  // number of slots per day
@@ -22,9 +22,9 @@ public class Simulation {
     double weightEl = 1.0 / 168.0;      // objective weight elective appointment wait time
     double weightUr = 1.0 / 9.0;        // objective weight urgent scan wait time
 
-    //Variables we need to set ourselves
-    int W = 100;                        // number of weeks (= runs length)
-    int R = 5;                         // number of replications (set their values yourself in the initialization method!)
+    // Variables we need to set ourselves
+    int W = 54*20;                        // number of weeks (= runs length)
+    int R = 300;                         // number of replications (set their values yourself in the initialization method!)
     int d,s,w,r;
     int rule = 2;                      // the appointment scheduling rule
     //not sure about this one
@@ -506,7 +506,7 @@ public class Simulation {
             urgentScanWT += avgUrgentScanWT;
             OT += avgOT;
             OV += (avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr);
-            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.2f \t ", avgOT) + String.format("%.2f \t ", (avgElectiveAppWT * weightEl + avgUrgentScanWT * weightUr)));
+            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.2f \t ", avgOT) + String.format("%.2f \t ", ((avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr))));
         }
         electiveAppWT = electiveAppWT / R;
         electiveScanWT = electiveScanWT / R;
