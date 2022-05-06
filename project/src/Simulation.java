@@ -514,7 +514,7 @@ public class Simulation {
         OT = OT / R;
         OV = OV / R;
         double objectiveValue = (electiveAppWT * weightEl) + (urgentScanWT * weightUr);
-        System.out.println("Avg. " + String.format("\t%.2f",electiveAppWT) + " " + String.format("\t %.2f \t",electiveScanWT) + " " + String.format("\t %.2f\t",urgentScanWT) + " " + String.format("\t %.2f\t",OT) + " " + String.format("%.2f",objectiveValue));
+        System.out.println("Avg. " + String.format("\t%.2f",electiveAppWT) + " " + String.format("\t %.2f \t",electiveScanWT) + " " + String.format("\t %.2f\t",urgentScanWT) + " " + String.format("\t %.4f\t",OT) + " " + String.format("%.4f",objectiveValue));
 
         // print results
         //PrintWriter pw = new PrintWriter(new FileWriter("C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/output.txt")); // TODO: use your own directory
