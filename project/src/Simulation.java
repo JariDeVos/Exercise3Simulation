@@ -3,7 +3,7 @@ import java.util.*;
 
 public class Simulation {
     //information given in the case
-    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S3-16.txt";
+    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S3-12.txt";
     int D = 6;                         // number of days per week (NOTE: Sunday not included! so do NOT use to calculate appointment waiting time)
     int amountOTSlotsPerDay = 10;      // number of overtime slots per day
     int S = 32 + amountOTSlotsPerDay;  // number of slots per day
@@ -505,15 +505,15 @@ public class Simulation {
             electiveScanWT += avgElectiveScanWT;
             urgentScanWT += avgUrgentScanWT;
             OT += avgOT;
-            OV += (avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr);
-            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.2f \t ", avgOT) + String.format("%.2f \t ", ((avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr))));
+            OV += (avgElectiveAppWT / weightEl) + (avgUrgentScanWT / weightUr);
+            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.2f \t ", avgOT) + String.format("%.2f \t ", ((avgElectiveAppWT / weightEl) + (avgUrgentScanWT / weightUr))));
         }
         electiveAppWT = electiveAppWT / R;
         electiveScanWT = electiveScanWT / R;
         urgentScanWT = urgentScanWT / R;
         OT = OT / R;
         OV = OV / R;
-        double objectiveValue = (electiveAppWT * weightEl) + (urgentScanWT * weightUr);
+        double objectiveValue = (electiveAppWT / weightEl) + (urgentScanWT / weightUr);
         System.out.println("Avg. " + String.format("\t%.2f",electiveAppWT) + " " + String.format("\t %.2f \t",electiveScanWT) + " " + String.format("\t %.2f\t",urgentScanWT) + " " + String.format("\t %.2f\t",OT) + " " + String.format("%.2f",objectiveValue));
 
         // print results
