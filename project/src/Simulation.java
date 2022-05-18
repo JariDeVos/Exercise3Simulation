@@ -3,7 +3,7 @@ import java.util.*;
 
 public class Simulation {
     //information given in the case
-    String inputFileName = "C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/input-S3-10.txt";
+    String inputFileName = "/Users/jaridevos/Documents/Simulation/Exercise3/strategies/input-S3-18.txt";
     int D = 6;                         // number of days per week (NOTE: Sunday not included! so do NOT use to calculate appointment waiting time)
     int amountOTSlotsPerDay = 10;      // number of overtime slots per day
     int S = 32 + amountOTSlotsPerDay;  // number of slots per day
@@ -23,8 +23,8 @@ public class Simulation {
     double weightUr = 1.0 / 9.0;        // objective weight urgent scan wait time
 
     // Variables we need to set ourselves
-    int W = 54*20;                        // number of weeks (= runs length)
-    int R = 300;                         // number of replications (set their values yourself in the initialization method!)
+    int W = 104;                        // number of weeks (= runs length)
+    int R = 28;                      // number of replications (set their values yourself in the initialization method!)
     int d,s,w,r;
     int rule = 2;                      // the appointment scheduling rule
     //not sure about this one
@@ -43,6 +43,19 @@ public class Simulation {
     double avgOT = 0;                      // average overtime
     int numberOfElectivePatientsPlanned = 0;
     int numberOfUrgentPatientsPlanned = 0;
+
+    ArrayList<Integer> count = new ArrayList<>();
+    //set true to generateRandomNumbers and set false to use the same random numbers (method of common random numbers)
+    // +!! if you set false you also have to change the text file on line 589 to a file that you haven't used yet
+    boolean generateRandomNumbers = true;
+    File f1 = new File("/Users/jaridevos/Documents/Simulation/Exercise3/randomnumbersElective.txt");
+    ArrayList<String> read = new ArrayList<>();
+
+    public void fillArray() throws FileNotFoundException{
+        Scanner sc = new Scanner(f1);
+        while(sc.hasNextLine()){ read.add(sc.nextLine()); }
+        sc.close();
+    }
 
     public void resetSystem(){
         patients.clear();
@@ -108,6 +121,7 @@ public class Simulation {
     }
 
     public int getRandomScanType(Random rand){
+
         double r = (float) rand.nextInt(1000)/1000;
         int type = -1;
         for(int i = 0; i<5 && type == -1; i++){
@@ -121,59 +135,137 @@ public class Simulation {
         return type;
     }
 
-    public void generatePatients(Random r){
+    public void generatePatients(Random r, PrintWriter pw) throws IOException {
         double arrivalTimeNext;
         int counter = 0; // total number of patients so far
         int patientType, scanType, endTime;
         double callTime, tardiness, duration, lambda;
         boolean noShow;
-        for(w=0; w < W; w++){
-            for(d = 0; d < D; d++){ // not on Sunday
-                // generate ELECTIVE patients for this day
-                if(d < D-1){  // not on Saturday either
-                    arrivalTimeNext = 8 + Distributions.Exponential_distribution(lambdaElective, r) * (17-8);
-                    while(arrivalTimeNext < 17){ // desk open from 8h until 17h
-                        patientType = 1;                // elective
-                        scanType = 0;                   // no scan type
-                        callTime = arrivalTimeNext;     // set call time, i.e. arrival event time
-                        tardiness = Distributions.Normal_distribution(meanTardiness, stdevTardiness, r) / 60.0;       // in practice this is not known yet at time of call
-                        int num = Distributions.Bernouilli_distribution(probNoShow, r); // in practice this is not known yet at time of call
-                        if(num == 1){
-                            noShow = true;
-                        } else{
-                            noShow = false;
+        if(generateRandomNumbers){
+            //PrintWriter pw = new PrintWriter(new FileWriter("/Users/jaridevos/Documents/Simulation/Exercise3/randomnumbersElective.txt"));
+            //PrintWriter prwr = new PrintWriter(new FileWriter("/Users/jaridevos/Documents/Simulation/Exercise3/randomnumbersUrgent.txt"));
+            for(w=0; w < W; w++){
+                for(d = 0; d < D; d++){ // not on Sunday
+                    // generate ELECTIVE patients for this day
+                    if(d < D-1){  // not on Saturday either
+                        arrivalTimeNext = 8 + Distributions.Exponential_distribution(lambdaElective, r) * (17-8);
+                        while(arrivalTimeNext < 17){ // desk open from 8h until 17h
+                            patientType = 1;                // elective
+                            scanType = 0;                   // no scan type
+                            callTime = arrivalTimeNext;     // set call time, i.e. arrival event time
+                            tardiness = Distributions.Normal_distribution(meanTardiness, stdevTardiness, r) / 60.0;       // in practice this is not known yet at time of call
+                            int num = Distributions.Bernouilli_distribution(probNoShow, r); // in practice this is not known yet at time of call
+                            if(num == 1){
+                                noShow = true;
+                            } else{
+                                noShow = false;
+                            }
+                            duration = Distributions.Normal_distribution(meanElectiveDuration, stdevElectiveDuration, r) / 60.0; // in practice this is not known yet at time of call
+                            pw.write(arrivalTimeNext + ";" + tardiness + ";" + num + ";" + duration + "\n");
+                            Patient pat = new Patient(counter, patientType, scanType, w, d, callTime, tardiness, noShow, duration);
+                            patients.add(pat);
+                            count.add(counter);
+                            counter++;
+                            arrivalTimeNext = arrivalTimeNext + Distributions.Exponential_distribution(lambdaElective, r) * (17-8); // arrival time of next patient (if < 17h)
                         }
-                        duration = Distributions.Normal_distribution(meanElectiveDuration, stdevElectiveDuration, r) / 60.0; // in practice this is not known yet at time of call
-                        Patient pat = new Patient(counter, patientType, scanType, w, d, callTime, tardiness, noShow, duration);
-                        patients.add(pat);
-                        counter++;
-                        arrivalTimeNext = arrivalTimeNext + Distributions.Exponential_distribution(lambdaElective, r) * (17-8); // arrival time of next patient (if < 17h)
+                        pw.write(arrivalTimeNext + ";" + "\n");
                     }
+                    // generate URGENT patients for this day
+                    if(d == 3 || d == 5){
+                        lambda = lambdaUrgent[1]; // on Wed and Sat, only half a day!
+                        endTime = 12;
+                    }else{
+                        lambda = lambdaUrgent[0];
+                        endTime = 17;
+                    }
+                    arrivalTimeNext = 8 + Distributions.Exponential_distribution(lambda, r) * (endTime-8);
+                    while(arrivalTimeNext < endTime){ // desk open from 8h until 17h
+                        patientType = 2;                // urgent
+                        scanType = getRandomScanType(r); // set scan type
+                        callTime = arrivalTimeNext;     // set arrival time, i.e. arrival event time
+                        tardiness = 0;                  // urgent patients have an arrival time = arrival event time
+                        noShow = false;                 // urgent patients are never no-show
+                        duration = Distributions.Normal_distribution(meanUrgentDuration[scanType], stdevUrgentDuration[scanType], r) / 60.0; // in practice this is not known yet at time of arrival
+                        pw.write(arrivalTimeNext + ";" + scanType + ";" + duration + "\n");
+                        Patient patient = new Patient(counter, patientType, scanType, w, d, callTime, tardiness, noShow, duration);
+                        patients.add(patient);
+                        count.add(counter);
+                        counter++;
+                        arrivalTimeNext = arrivalTimeNext + Distributions.Exponential_distribution(lambda, r) * (endTime-8); // arrival time of next patient (if < 17h)
+                    }
+                    pw.write(arrivalTimeNext + ";" + "\n");
                 }
-                // generate URGENT patients for this day
-                if(d == 3 || d == 5){
-                    lambda = lambdaUrgent[1]; // on Wed and Sat, only half a day!
-                    endTime = 12;
-                }else{
-                    lambda = lambdaUrgent[0];
-                    endTime = 17;
-                }
-                arrivalTimeNext = 8 + Distributions.Exponential_distribution(lambda, r) * (endTime-8);
-                while(arrivalTimeNext < endTime){ // desk open from 8h until 17h
-                    patientType = 2;                // urgent
-                    scanType = getRandomScanType(r); // set scan type
-                    callTime = arrivalTimeNext;     // set arrival time, i.e. arrival event time
-                    tardiness = 0;                  // urgent patients have an arrival time = arrival event time
-                    noShow = false;                 // urgent patients are never no-show
-                    duration = Distributions.Normal_distribution(meanUrgentDuration[scanType], stdevUrgentDuration[scanType], r) / 60.0; // in practice this is not known yet at time of arrival
-                    Patient patient = new Patient(counter, patientType, scanType, w, d, callTime, tardiness, noShow, duration);
-                    patients.add(patient);
-                    counter++;
-                    arrivalTimeNext = arrivalTimeNext + Distributions.Exponential_distribution(lambda, r) * (endTime-8); // arrival time of next patient (if < 17h)
+            }
+        }else{
+            /*File f2 = new File("/Users/jaridevos/Documents/Simulation/Exercise3/randomnumbersUrgent.txt");
+            ArrayList<String> read2 = new ArrayList<>();
+            Scanner sc2 = new Scanner(f2);
+            while(sc2.hasNextLine()){ read2.add(sc2.nextLine()); }*/
+
+            for(w=0; w < W; w++){
+                for(d = 0; d < D; d++){ // not on Sunday
+                    // generate ELECTIVE patients for this day
+                    if(d < D-1){  // not on Saturday either
+                        arrivalTimeNext = Double.parseDouble(read.get(0).substring(0, read.get(0).indexOf(";")));
+                        while(arrivalTimeNext < 17){ // desk open from 8h until 17h
+                            String line = read.get(0);
+                            patientType = 1;                // elective
+                            scanType = 0;                   // no scan type
+                            callTime = arrivalTimeNext;     // set call time, i.e. arrival event time
+                            line = line.substring(line.indexOf(";")+1);
+                            tardiness = Double.parseDouble(line.substring(0, line.indexOf(";")));       // in practice this is not known yet at time of call
+                            line = line.substring(line.indexOf(";")+1);
+                            int num = Integer.parseInt(line.substring(0, line.indexOf(";"))); // in practice this is not known yet at time of call
+                            if(num == 1){
+                                noShow = true;
+                            } else{
+                                noShow = false;
+                            }
+                            duration = Double.parseDouble(line.substring(line.indexOf(";")+1)); // in practice this is not known yet at time of call
+                            Patient pat = new Patient(counter, patientType, scanType, w, d, callTime, tardiness, noShow, duration);
+                            patients.add(pat);
+                            count.add(counter);
+                            counter++;
+                            read.remove(0);
+                            arrivalTimeNext = Double.parseDouble(read.get(0).substring(0, read.get(0).indexOf(";"))); // arrival time of next patient (if < 17h)
+                        }
+                    }
+                    // generate URGENT patients for this day
+                    if(d == 3 || d == 5){
+                        lambda = lambdaUrgent[1]; // on Wed and Sat, only half a day!
+                        endTime = 12;
+                    }else{
+                        lambda = lambdaUrgent[0];
+                        endTime = 17;
+                    }
+                    if((d != D-1)){
+                        read.remove(0);
+                    }
+                    arrivalTimeNext = Double.parseDouble(read.get(0).substring(0, read.get(0).indexOf(";")));
+                    while(arrivalTimeNext < endTime){ // desk open from 8h until 17h
+                        String line2 = read.get(0);
+                        patientType = 2;              // urgent
+                        line2 = line2.substring(line2.indexOf(";")+1);
+                        scanType = Integer.parseInt(line2.substring(0,line2.indexOf(";"))); // set scan type
+                        callTime = arrivalTimeNext;     // set arrival time, i.e. arrival event time
+                        tardiness = 0;                  // urgent patients have an arrival time = arrival event time
+                        noShow = false;                 // urgent patients are never no-show
+                        line2 = line2.substring(line2.indexOf(";")+1);
+                        duration = Double.parseDouble(line2); // in practice this is not known yet at time of arrival
+                        Patient patient = new Patient(counter, patientType, scanType, w, d, callTime, tardiness, noShow, duration);
+                        patients.add(patient);
+                        count.add(counter);
+                        counter++;
+                        read.remove(0);
+                        arrivalTimeNext = Double.parseDouble(read.get(0).substring(0, read.get(0).indexOf(";"))); // arrival time of next patient (if < 17h)
+                    }
+                    read.remove(0);
                 }
             }
         }
     }
+
+
 
     public int getNextSlotNrFromTime(int day, int patientType, double time) throws NumberFormatException{
         boolean found = false;
@@ -382,8 +474,12 @@ public class Simulation {
         });
     }
 
-    public void runOneSimulation(Random r) throws IOException {
-        generatePatients(r);     // create patient arrival events (elective patients call, urgent patient arrive at the hospital)
+    public void runOneSimulation(Random r, PrintWriter pw) throws IOException{
+        try{
+            generatePatients(r, pw);// create patient arrival events (elective patients call, urgent patient arrive at the hospital)
+        }catch(Exception e){
+            System.out.println("smt wrong with writing random numbers");
+        }
         schedulePatients();     // schedule urgent and elective patients in slots based on their arrival events => determine the appointment wait time
         sortPatientsOnAppTime();   // sort patients on their appointment time (unscheduled patients are grouped at the end of the list)
 
@@ -473,14 +569,6 @@ public class Simulation {
         avgElectiveScanWT = avgElectiveScanWT / numberOfPatients[0];
         avgUrgentScanWT = avgUrgentScanWT / numberOfPatients[1];
         avgOT = avgOT / (D * W);
-        // print moving avg
-        PrintWriter pw = new PrintWriter(new FileWriter("C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/output-movingAvg.txt")); // TODO: use your own directory
-        pw.write("week \t elAppWT \t elScanWT \t urScanWT \t OT \n");
-
-        for(w = 0; w < W; w++){
-            pw.write(String.format("%d \t ", w+1) + String.format("%.2f \t ", movingAvgElectiveAppWT[w]) + String.format("%.2f \t ", movingAvgElectiveScanWT[w]) + String.format("%.2f \t ", movingAvgUrgentScanWT[w]) + String.format("%.2f \n", movingAvgOT[w]));
-        }
-        pw.close();
     }
 
     public void runSimulations() throws IOException {
@@ -496,26 +584,40 @@ public class Simulation {
         }
         System.out.println("R \t elAppWT \t elScanWT \t urScanWT \t OT \t OV \n");
         // run R replications
+        PrintWriter pw1 = new PrintWriter(new FileWriter("/Users/jaridevos/Documents/Simulation/Output.txt"));
+        // if you want to use the same random numbers, you need to fill in a text file that you haven't used yet here instead of the file randomnumbersElective
+        PrintWriter pw = new PrintWriter(new FileWriter("/Users/jaridevos/Documents/Simulation/Exercise3/randomnumbersElective.txt"));
+        try{
+            fillArray();
+        }catch(FileNotFoundException e){
+            System.out.println("File with randomnumbers not found");
+        }
         for(r = 0; r < R; r++){
             resetSystem(); // reset all variables related to 1 replication
             Random rand = new Random();
             rand.setSeed(r);               // set seed value for random value generator
-            runOneSimulation(rand);     // run 1 simulation / replication
+            runOneSimulation(rand, pw);     // run 1 simulation / replication
             electiveAppWT += avgElectiveAppWT;
             electiveScanWT += avgElectiveScanWT;
             urgentScanWT += avgUrgentScanWT;
             OT += avgOT;
             OV += (avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr);
-            System.out.println(r+1 + " " + String.format("\t\t%.2f  \t", avgElectiveAppWT) + String.format(" %.2f \t ", avgElectiveScanWT) + String.format("\t %.2f \t ", avgUrgentScanWT) + String.format("\t %.4f \t ", avgOT) + String.format("%.4f \t ", ((avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr))));
+            //System.out.println(r+1 + " " + String.format("\t\t%.4f  \t", avgElectiveAppWT) + String.format(" %.4f \t ", avgElectiveScanWT) + String.format("\t %.4f \t ", avgUrgentScanWT) + String.format("\t %.4f \t ", avgOT) + String.format("%.4f \t ", ((avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr))));
+            System.out.println(String.format("%.4f",((avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr))));
+            pw1.write(String.format("%.4f",((avgElectiveAppWT * weightEl) + (avgUrgentScanWT * weightUr))) + "\n");
         }
+        pw1.close();
+        pw.close();
+        //System.out.println(count.size());
         electiveAppWT = electiveAppWT / R;
         electiveScanWT = electiveScanWT / R;
         urgentScanWT = urgentScanWT / R;
         OT = OT / R;
         OV = OV / R;
         double objectiveValue = (electiveAppWT * weightEl) + (urgentScanWT * weightUr);
-        System.out.println("Avg. " + String.format("\t%.2f",electiveAppWT) + " " + String.format("\t %.2f \t",electiveScanWT) + " " + String.format("\t %.2f\t",urgentScanWT) + " " + String.format("\t %.4f\t",OT) + " " + String.format("%.4f",objectiveValue));
+        //System.out.println("Avg. " + String.format("\t%.4f",electiveAppWT) + " " + String.format("\t %.4f \t",electiveScanWT) + " " + String.format("\t %.4f\t",urgentScanWT) + " " + String.format("\t %.4f\t",OT) + " " + String.format("%.4f",objectiveValue));
 
+        //System.out.println("AVG: " + String.format("%.4f",objectiveValue));
         // print results
         //PrintWriter pw = new PrintWriter(new FileWriter("C:/Users/casco/OneDrive/Documents/GitHub/ProjectSimulation/output.txt")); // TODO: use your own directory
         //pw.write("week \t elAppWT \t elScanWT \t urScanWT \t OT \n");
